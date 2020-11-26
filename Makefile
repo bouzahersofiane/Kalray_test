@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g -Wall -lpng 
+CFLAGS= -Wall -lpng  -fopenmp -O3  
 
 all: png
 

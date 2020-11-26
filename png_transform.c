@@ -11,8 +11,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-
 #include <png.h>
+#include <omp.h>
+#include<time.h>
+
 
 void
 abort_(const char *s, ...)
@@ -164,6 +166,7 @@ process_file(struct decoded_image *img)
 	printf("Starting processing\n");
 	for (x = 0; x < img->w; x++)
 	  {
+    //#pragma omp parallel for
 	  for (y = 0; y < img->h; y++)  /*segmentation fault resolution*/
 	    {
 	      png_byte *row = img->row_pointers[y];
@@ -174,6 +177,7 @@ process_file(struct decoded_image *img)
 	  }
 
 	for (x = 0; x < img->w; x++) {
+    //#pragma omp parallel for
 		for (y = 0; y < img->h; y++) {
 			png_byte *row = img->row_pointers[y];
 			png_byte *ptr = &(row[x * 4]);
@@ -200,6 +204,7 @@ transformation2(struct decoded_image *img,double red_weight, double green_weight
 	printf("Starting processing 2 \n");
 	for (x = 0; x < img->w; x++)
 	  {
+    //#pragma omp parallel for
 	  for (y = 0; y < img->h; y++)
 	    {
 	      png_byte *row = img->row_pointers[y];
@@ -222,6 +227,9 @@ transformation2(struct decoded_image *img,double red_weight, double green_weight
 int
 main(int argc, char **argv)
 {
+    double temps;
+    clock_t start;
+
 	if (argc != 3)
 		abort_("Usage: program_name <file_in> <file_out> ");
 
@@ -232,13 +240,17 @@ main(int argc, char **argv)
     /*transformation choice*/
     int  choice = 0 ;
     while(choice != 1 && choice !=2 ){
-        printf("choose transformation case:\n 1: transformation 1\n 2: transformation 2 \n");
+        printf("choose transformation case (1 or 2) :\n 1: transformation 1\n 2: transformation 2 \n ");
         scanf("%d",&choice);
     }
     /*transformation 1*/
     if (choice == 1) {
+        start = clock();
         process_file(img);
+        temps = (double)(clock()-start)/(double)CLOCKS_PER_SEC;
+        printf("\n excution time for  transformation 1  %.2f sec!\n", temps);
     }
+
     if (choice == 2) {    /*transformation 2*/
         double red=0.,green=0.,blue=0.;
         /*set color weights*/
@@ -248,12 +260,14 @@ main(int argc, char **argv)
         scanf("%le",&green);
         printf("blue weight :");
         scanf("%le",&blue);
-
+        start = clock();
         transformation2(img,red,green,blue);
+        temps = (double)(clock()-start)/(double)CLOCKS_PER_SEC;
+        printf("\n excution time for transforamtion 2  %.2f sec!\n", temps);
     }
 
 	printf("Writing output PNG\n");
 	write_png_file(argv[2], img);
-
+    free(img);
 	return 0;
 }
