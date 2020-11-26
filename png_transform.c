@@ -164,7 +164,7 @@ process_file(struct decoded_image *img)
 	printf("Starting processing\n");
 	for (x = 0; x < img->w; x++)
 	  {
-	  for (y = 0; y < img->w; y++)
+	  for (y = 0; y < img->h; y++)  /*segmentation fault resolution*/
 	    {
 	      png_byte *row = img->row_pointers[y];
 	      png_byte *ptr = &(row[x * 4]);
@@ -188,20 +188,69 @@ process_file(struct decoded_image *img)
 	return 0;
 }
 
+/*second transformation implementation*/
+static int
+transformation2(struct decoded_image *img,double red_weight, double green_weight,double  blue_weight)
+{
+	printf("Checking PNG format\n");
+
+	if (png_get_color_type(img->png_ptr, img->info_ptr) != PNG_COLOR_TYPE_RGBA)
+		printf("[process_file] color_type of input file must be PNG_COLOR_TYPE_RGBA (%d) (is %d)", PNG_COLOR_TYPE_RGBA, png_get_color_type(img->png_ptr, img->info_ptr));
+
+	printf("Starting processing 2 \n");
+	for (x = 0; x < img->w; x++)
+	  {
+	  for (y = 0; y < img->h; y++)
+	    {
+	      png_byte *row = img->row_pointers[y];
+	      png_byte *ptr = &(row[x * 4]);
+	      /* applied color weight for each channel */
+	      ptr[0]  = ptr[0]*red_weight;
+          ptr[1] = ptr[1]*green_weight ;
+          ptr[2] = ptr[2]*blue_weight ;
+	    }
+	  }
+    printf("Processing 2 done\n");
+
+	png_destroy_read_struct(&img->png_ptr, &img->info_ptr, NULL);
+
+	return 0;
+}
+
 
 
 int
 main(int argc, char **argv)
 {
 	if (argc != 3)
-		abort_("Usage: program_name <file_in> <file_out>");
+		abort_("Usage: program_name <file_in> <file_out> ");
 
 	struct decoded_image *img = malloc(sizeof(struct decoded_image));
 
 	printf("Reading input PNG\n");
 	read_png_file(argv[1], img);
+    /*transformation choice*/
+    int  choice = 0 ;
+    while(choice != 1 && choice !=2 ){
+        printf("choose transformation case:\n 1: transformation 1\n 2: transformation 2 \n");
+        scanf("%d",&choice);
+    }
+    /*transformation 1*/
+    if (choice == 1) {
+        process_file(img);
+    }
+    if (choice == 2) {    /*transformation 2*/
+        double red=0.,green=0.,blue=0.;
+        /*set color weights*/
+        printf("red weight :"); 
+        scanf("%le",&red);  /*scan color weight from stdin*/
+        printf("green weight :");
+        scanf("%le",&green);
+        printf("blue weight :");
+        scanf("%le",&blue);
 
-	process_file(img);
+        transformation2(img,red,green,blue);
+    }
 
 	printf("Writing output PNG\n");
 	write_png_file(argv[2], img);

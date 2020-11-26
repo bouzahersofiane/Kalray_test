@@ -21,8 +21,10 @@ Ensure mandatory tools installation
 *Problem resolved by replacing width (w) by height(h) in the for loop.
 
 
-### Transformation
+### Transformations
 
+*runing the code give to user the choice between the first and the second transformation.
+*If the user choose the first transformation, that will be automatically runned , contrary to the second transformation which require the colors weight introduction.
 
 
 ### Performance analysis
